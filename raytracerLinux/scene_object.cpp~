@@ -124,9 +124,9 @@ bool NullObject::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
     return false;
 }
 
-MyTriangle::MyTriangle(Vector3D norm, Point3D a, Point3D b, Point3D c) : n(norm), p0(a), p1(b), p2(c) {}
+UnitTriangle::UnitTriangle(Vector3D norm, Point3D a, Point3D b, Point3D c) : n(norm), p0(a), p1(b), p2(c) {}
 
-bool MyTriangle::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
+bool UnitTriangle::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld ) {
 
 	bool occured = false;
@@ -325,9 +325,8 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	if (occured && (ray.intersection.none || t_value < ray.intersection.t_value)) {
 		overwrite = true;
-		Intersection intersection;
 		Point3D intersectionPointModelSpace = rayModelSpace.point_at(t_value);
-		intersection.point = modelToWorld * intersectionPointModelSpace;
+		ray.intersection.point = modelToWorld * intersectionPointModelSpace;
 		Vector3D normal;
 		if (hit_bottom) {
 			normal = Vector3D(0, 0, -1.0);
@@ -335,10 +334,9 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			normal = Vector3D(intersectionPointModelSpace[0], 1 - intersectionPointModelSpace[1], intersectionPointModelSpace[2]);
 		}
 		normal.normalize();
-		intersection.normal = worldToModel.transpose() * normal;
-		intersection.t_value = t_value;
-		intersection.none = false;
-		ray.intersection = intersection;
+		ray.intersection.normal = worldToModel.transpose() * normal;
+		ray.intersection.t_value = t_value;
+		ray.intersection.none = false;
 	}
 
 	return occured && overwrite;

@@ -8,7 +8,7 @@ public:
 		v.normalize();
 		u.normalize();
 		// weaken the contribution of each ray we cast
-		color = (1.0 / NUM_SHADOW_RAYS) * col;
+		color = col;
 	}
 	Point3D get_position() const { return pos; }
 	void shade( Ray3D& );

@@ -214,7 +214,7 @@ void Raytracer::computeShading( Ray3D& ray ) {
 	}
 	// even points in shadows get ambient lighting
 	if (LightSource::RENDER_TYPE != SCENE_SIGNATURE) {
-		Colour col = ray.col + ray.intersection.mat->ambient * getAmbientLight();
+		Colour col = ray.col + ray.intersection.mat->ambient * ambientLight;
 		col.clamp();
 		ray.col = col;
 	}
@@ -458,7 +458,7 @@ SceneDagNode* Raytracer::loadTriangeMesh(string filename, Material* material) {
 	// format: normal, 3 coords, normal, 3 coords etc.
 	assert(coords.size() % 4 == 0);
 	for (unsigned int i = 0; i < coords.size(); i+=4) {
-		MyTriangle* myTriangle = new MyTriangle(
+		UnitTriangle* myTriangle = new UnitTriangle(
 					 Vector3D (coords[i] - Point3D(0, 0, 0)),
 					 Point3D  (coords[i+1]),
 					 Point3D  (coords[i+2]),
@@ -568,7 +568,7 @@ void shapeScene(Raytracer& raytracer) {
 
     SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
     SceneDagNode* cylinder = raytracer.addObject( new UnitCylinder(), &weird );
-    SceneDagNode* cylinderUp = raytracer.addObject( new UnitCylinder(), &blue);
+    //SceneDagNode* cylinderUp = raytracer.addObject( new UnitCylinder(), &blue);
 
     // Apply some transformations to the unit square.
     double factor1[3] = { 1.0, 2.0, 1.0 };
@@ -593,8 +593,8 @@ void shapeScene(Raytracer& raytracer) {
     raytracer.scale(cylinder, Point3D(0, 0, 0), factor3);
     raytracer.translate(cylinder, Vector3D(-1, -1, -1));
     
-    raytracer.scale(cylinder, Point3D(0, 0, 0), factor3);
-    raytracer.translate(cylinder, Vector3D(0, -1, -3));
+    //raytracer.scale(cylinder, Point3D(0, 0, 0), factor3);
+    //raytracer.translate(cylinder, Vector3D(0, -1, -3));
 
     raytracer.translate(plane, Vector3D(0, 0, -7));        
     raytracer.rotate(plane, 'z', 45); 
@@ -724,7 +724,7 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	Scene scene = DOF_DEMO;
+	Scene scene = SHAPE_SCENE;
 	int si = 0;
 	/* Define scene objects and transformations here */
 	switch(scene) {

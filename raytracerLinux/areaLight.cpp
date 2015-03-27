@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 void AreaLight::shade( Ray3D& ray ) {
-    PointLight pointLight = PointLight(Point3D(), diffuse, specular);
+    PointLight pointLight = PointLight(Point3D(), color);
 
     // pick points on the light and pretend a point light of 1/#points intensity is there
     for (unsigned int i = 0; i < NUM_SHADOW_RAYS; i++) {

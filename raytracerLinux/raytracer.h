@@ -157,7 +157,7 @@ private:
 	Colour shadeRay( Ray3D& ray , int depth);
 
 	// Constructs a view to world transformation matrix based on the
-	// camera parameters.
+	// camera parameter
 	Matrix4x4 initInvViewMatrix( Point3D eye, Vector3D view, Vector3D up );
 
 

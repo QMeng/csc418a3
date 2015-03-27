@@ -52,9 +52,9 @@ class NullObject : public SceneObject {
 			const Matrix4x4& modelToWorld );
 };
 
-class MyTriangle : public SceneObject {
+class UnitTriangle : public SceneObject {
 public:
-	MyTriangle(Vector3D norm, Point3D a, Point3D b, Point3D c);
+	UnitTriangle(Vector3D norm, Point3D a, Point3D b, Point3D c);
 	bool intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			const Matrix4x4& modelToWorld );
 

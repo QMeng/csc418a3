@@ -14,7 +14,7 @@
     
 /* Set the type of shading here */
 
-RenderType LightSource::RENDER_TYPE = SCENE_SIGNATURE; 
+RenderType LightSource::RENDER_TYPE = PHONG; 
 
 void PointLight::shade( Ray3D& ray ) {
 	// TODO: implement this function to fill in values for ray.col 
@@ -25,7 +25,6 @@ void PointLight::shade( Ray3D& ray ) {
 	// is available.  So be sure that traverseScene() is called on the ray 
 	// before this function.  
 
-    // TODO:
 	
     Vector3D normal_vector = ray.intersection.normal;
     normal_vector.normalize();

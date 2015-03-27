@@ -57,7 +57,8 @@ void PointLight::shade( Ray3D& ray ) {
             double vdotr = view_vector.dot(reflect_vector);
 	    double power = pow(vdotr, material->specular_exp);
             col = (0 < ldotn? ldotn : 0) * material->diffuse * _col_diffuse +
-                  (0 < power? power : 0) * material->specular * _col_specular;
+                  (0 < power? power : 0) * material->specular * _col_specular +
+                  (0 < ldotn? ldotn : 0) * material->ambient * _col_ambient;
             }
         break;
 	
