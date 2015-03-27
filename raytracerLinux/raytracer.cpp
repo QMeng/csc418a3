@@ -722,7 +722,7 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	Scene scene = SHAPE_SCENE;
+	Scene scene = SPACE_INVADERS;
 	int si = 0;
 	/* Define scene objects and transformations here */
 	switch(scene) {

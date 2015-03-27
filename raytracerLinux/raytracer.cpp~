@@ -768,7 +768,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-	  raytracer.render(width, height, eye2, view3, up, fov, (char*) "view2.bmp");
+	  raytracer.render(width, height, eye2, view2, up, fov, (char*) "view2.bmp");
 	}
 	
 	return 0;
