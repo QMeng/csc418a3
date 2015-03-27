@@ -532,7 +532,7 @@ void spaceInvaders(Raytracer& raytracer) {
 	double factor[3] = { 0.2, 0.2, 0.2 };
 	double wallFactor[3] = { 100.0, 100.0, 100.0 };
 
-    // Middle Row 
+	// Middle Row 
 	SceneDagNode* space_invaderMiddleMiddle = raytracer.loadTriangeMesh("space_invader.stl", &gold);
 	raytracer.translate(space_invaderMiddleMiddle, Vector3D(0, 25, -70));
 	raytracer.scale(space_invaderMiddleMiddle, Point3D(0, 0, 0), factor);
