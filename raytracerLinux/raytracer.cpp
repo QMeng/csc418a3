@@ -197,18 +197,18 @@ void Raytracer::computeShading( Ray3D& ray ) {
 
 		// Implement shadows here if needed.
 		#ifdef SHADOWS
-		/* HARD SHADOWS */
-		// cast a ray out from the light to the object and see if the intersection is the same one found by the current ray. If not, its in shadow, so we skip shading
+			/* HARD SHADOWS */
+			// cast a ray out from the light to the object and see if the intersection is the same one found by the current ray. If not, its in shadow, so we skip shading
 	    	Vector3D lightToObject = ray.intersection.point - lightSource->get_position();
 	    	lightToObject.normalize();
 	    	Ray3D rayLightToObjectWorldSpace = Ray3D(lightSource->get_position(), lightToObject);
 	    	traverseScene(_root, rayLightToObjectWorldSpace);
 	    	if (rayLightToObjectWorldSpace.intersection.point == ray.intersection.point) {
-			lightSource->shade(ray);
+				lightSource->shade(ray);
 	    	}
-		#else 
+	    #else 
 	    	lightSource->shade(ray);
-		#endif
+	    #endif
 
 		curLight = curLight->next;
 	}
@@ -261,6 +261,7 @@ bool refract(Vector3D d, Vector3D n, double n1, Vector3D& t) {
 	t.normalize();
 	return true;
 }
+
 
 Colour Raytracer::shadeRay( Ray3D& ray, int depth, bool debug ) {
 	
@@ -366,10 +367,11 @@ void Raytracer::render(int width, int height, Point3D eye, Vector3D view, Vector
 	Matrix4x4 viewToWorld;
 
 	double factor = (double(height)/2)/tan(fov*M_PI/360.0);
-	double z_focus_intersect = FOCAL_DISTANCE;
-	double x_focus_intersect, y_focus_intersect;
 	
 	initPixelBuffer();
+	
+	double z_focus_intersect = FOCAL_DISTANCE;
+	double x_focus_intersect, y_focus_intersect;
 	viewToWorld = initInvViewMatrix(eye, view, up);
 
 	for (int i = 0; i < _scrHeight; i++) {
@@ -402,21 +404,21 @@ void Raytracer::render(int width, int height, Point3D eye, Vector3D view, Vector
 				Point3D ray_origin(cos(aperture_theta) * aperture_radius, sin(aperture_theta) * aperture_radius, 0); 	
 				Ray3D rayViewSpace(ray_origin, focus_point - ray_origin);     
 				Ray3D rayWorldSpace(viewToWorld * rayViewSpace.origin, viewToWorld * rayViewSpace.dir);
-				
+			    
 				// Sum up final colour
 				col = col + shadeRay(rayWorldSpace, SHADE_DEPTH);
 			}
-          
+		      
 			// Find the final average colour
 			col = (double) 1.0 / NUM_APERTURE_RAYS * col;
-#else
+	      #else
 			// TODO: Convert ray to world space and call 
 			// shadeRay(ray) to generate pixel colour.         
 			Ray3D rayViewSpace(origin, imagePlane - origin);
 			Ray3D rayWorldSpace(viewToWorld * rayViewSpace.origin, viewToWorld * rayViewSpace.dir);
 			
 			Colour col = shadeRay(rayWorldSpace, SHADE_DEPTH); 
-#endif
+	      #endif
 			_rbuffer[i*width+j] = int(col[0]*255);
 			_gbuffer[i*width+j] = int(col[1]*255);
 			_bbuffer[i*width+j] = int(col[2]*255);
@@ -492,8 +494,8 @@ Material weird( Colour(0.4, 0, 0.7), Colour(0.1, 0.445, 0.95),
                 Colour(0.228, 0.628, 0.58), 
                 12.0 );
 Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0),        
-		Colour(0.0, 0.0, 0.0),                                       
-		0.0 );                                                       
+        Colour(0.0, 0.0, 0.0),                                       
+        0.0 );                                                       
 
 /* The default scene, given with the assignment */
 void defaultScene(Raytracer& raytracer) {
@@ -712,9 +714,6 @@ int main(int argc, char* argv[])
 		width = atoi(argv[1]);
 		height = atoi(argv[2]);
 	}
-
-	assert(height % NUM_THREADS == 0);
-
 
 	Scene scene = SHAPE_SCENE;
 	/* Define scene objects and transformations here */
