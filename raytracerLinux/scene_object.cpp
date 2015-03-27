@@ -154,12 +154,10 @@ bool MyTriangle::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	if (occured && (ray.intersection.none || t_value < ray.intersection.t_value)) {
 		overwrite = true;
-		Intersection intersection;
-		intersection.normal = n;
-		intersection.point = modelToWorld * planeIntersect;
-		intersection.t_value = t_value;
-		intersection.none = false;
-		ray.intersection = intersection;
+		ray.intersection.normal = n;
+		ray.intersection.point = modelToWorld * planeIntersect;
+		ray.intersection.t_value = t_value;
+		ray.intersection.none = false;
 	}
 	
 	return occured && overwrite;
@@ -243,9 +241,8 @@ bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	if (occured && (ray.intersection.none || t_value < ray.intersection.t_value)) {
 		overwrite = true;
-		Intersection intersection;
 		Point3D intersectionPointModelSpace = rayModelSpace.point_at(t_value);
-		intersection.point = modelToWorld * intersectionPointModelSpace;
+		ray.intersection.point = modelToWorld * intersectionPointModelSpace;
 		Vector3D normal;
 		if (hit_top) {
 			normal = Vector3D(0, 1.0, 0); 
@@ -255,10 +252,9 @@ bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			normal = Vector3D(intersectionPointModelSpace[0], 0, intersectionPointModelSpace[2]);
 		}
 		normal.normalize();
-		intersection.normal = worldToModel.transpose() * normal;
-		intersection.t_value = t_value;
-		intersection.none = false;
-		ray.intersection = intersection;
+		ray.intersection.normal = worldToModel.transpose() * normal;
+		ray.intersection.t_value = t_value;
+		ray.intersection.none = false;
 	}
 
 	return occured && overwrite;
@@ -329,9 +325,8 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	if (occured && (ray.intersection.none || t_value < ray.intersection.t_value)) {
 		overwrite = true;
-		Intersection intersection;
 		Point3D intersectionPointModelSpace = rayModelSpace.point_at(t_value);
-		intersection.point = modelToWorld * intersectionPointModelSpace;
+		ray.intersection.point = modelToWorld * intersectionPointModelSpace;
 		Vector3D normal;
 		if (hit_bottom) {
 			normal = Vector3D(0, 0, -1.0);
@@ -339,10 +334,9 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			normal = Vector3D(intersectionPointModelSpace[0], 1 - intersectionPointModelSpace[1], intersectionPointModelSpace[2]);
 		}
 		normal.normalize();
-		intersection.normal = worldToModel.transpose() * normal;
-		intersection.t_value = t_value;
-		intersection.none = false;
-		ray.intersection = intersection;
+		ray.intersection.normal = worldToModel.transpose() * normal;
+		ray.intersection.t_value = t_value;
+		ray.intersection.none = false;
 	}
 
 	return occured && overwrite;
