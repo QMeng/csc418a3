@@ -694,6 +694,7 @@ void dofDemo(Raytracer& raytracer ){
     SceneDagNode* sphere3 = raytracer.addObject( new UnitSphere(), &gold );
     SceneDagNode* sphere4 = raytracer.addObject( new UnitSphere(), &gold );
     SceneDagNode* sphere5 = raytracer.addObject( new UnitSphere(), &gold );
+    SceneDagNode* sphere6 = raytracer.addObject( new UnitSphere(), &gold );
 
     // Apply some transformations to the unit square.
     raytracer.translate(sphere , Vector3D(-3  , -1  , -5));
@@ -701,6 +702,7 @@ void dofDemo(Raytracer& raytracer ){
     raytracer.translate(sphere3, Vector3D( 0  , -0  , -9));
     raytracer.translate(sphere4, Vector3D( 1.5,  0.5, -11));
     raytracer.translate(sphere5, Vector3D( 3  ,  1  , -13));
+    raytracer.translate(sphere6, Vector3D( 4.5  ,  1.5  , -15));
 
 }
 
@@ -722,7 +724,7 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	Scene scene = SHAPE_SCENE;
+	Scene scene = DOF_DEMO;
 	int si = 0;
 	/* Define scene objects and transformations here */
 	switch(scene) {
@@ -731,10 +733,10 @@ int main(int argc, char* argv[])
 			break;
 		case SPACE_INVADERS:
 			spaceInvaders(raytracer);
+			si = 1;
 			break;
 		case SHAPE_SCENE:
 			shapeScene(raytracer);
-			si = 1;
 			break;
 		case QUADRATIC_SCENE:
 			quadraticScene(raytracer);
