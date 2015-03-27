@@ -153,12 +153,8 @@ private:
 	void flushPixelBuffer(char *file_name);
 
 	// Return the colour of the ray after intersection and shading, call 
-	// this function recursively for reflection and refraction.  
-	Colour shadeRay( Ray3D& ray, int depth, bool debug );
-	Colour shadeRay( Ray3D& ray , int depth) {
-		return shadeRay(ray, depth, false);
-	} 
-	
+	// this function recursively for reflection and refraction.
+	Colour shadeRay( Ray3D& ray , int depth);
 
 	// Constructs a view to world transformation matrix based on the
 	// camera parameters.

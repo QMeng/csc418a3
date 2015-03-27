@@ -263,7 +263,7 @@ bool refract(Vector3D d, Vector3D n, double n1, Vector3D& t) {
 }
 
 
-Colour Raytracer::shadeRay( Ray3D& ray, int depth, bool debug ) {
+Colour Raytracer::shadeRay( Ray3D& ray, int depth) {
 	
 	Colour k;
 	Vector3D t;
@@ -327,7 +327,7 @@ Colour Raytracer::shadeRay( Ray3D& ray, int depth, bool debug ) {
 				double r0 = pow(ray.intersection.mat->indexOfRefraction - 1, 2) / pow(ray.intersection.mat->indexOfRefraction + 1, 2);
 				double R = r0 + (1 - r0) * pow(1 - c, 5);
 				Colour reflect = R * shadeRay(reflectionRay, depth - 1); 
-				Colour refract = (1 - R) * shadeRay(transmittedRay, depth - 1, true);
+				Colour refract = (1 - R) * shadeRay(transmittedRay, depth - 1);
 				col = col + k * (refract + reflect);
 			}
 			// material wasn't refractive, but it is reflective:
@@ -532,7 +532,7 @@ void spaceInvaders(Raytracer& raytracer) {
 	double factor[3] = { 0.2, 0.2, 0.2 };
 	double wallFactor[3] = { 100.0, 100.0, 100.0 };
 
-    // Middle Row 
+	// Middle Row 
 	SceneDagNode* space_invaderMiddleMiddle = raytracer.loadTriangeMesh("space_invader.stl", &gold);
 	raytracer.translate(space_invaderMiddleMiddle, Vector3D(0, 25, -70));
 	raytracer.scale(space_invaderMiddleMiddle, Point3D(0, 0, 0), factor);
@@ -720,6 +720,7 @@ int main(int argc, char* argv[])
 	}
 
 	Scene scene = SPACE_INVADERS;
+	int si = 0;
 	/* Define scene objects and transformations here */
 	switch(scene) {
 		case DEFAULT:
@@ -729,7 +730,8 @@ int main(int argc, char* argv[])
 			spaceInvaders(raytracer);
 			break;
 		case SHAPE_SCENE:
-			shapeScene(raytracer); 
+			shapeScene(raytracer);
+			si = 1;
 			break;
 		case QUADRATIC_SCENE:
 			quadraticScene(raytracer);
@@ -757,7 +759,14 @@ int main(int argc, char* argv[])
 	// Render it from a different point of view.
 	Point3D eye2(4, 2, 1);
 	Vector3D view2(-4, -2, -6);
-	raytracer.render(width, height, eye2, view2, up, fov, (char*) "view2.bmp");
+	Vector3D view3(-1, 0, -6);
+	if (si == 1) {
+	  raytracer.render(width, height, eye2, view3, up, fov, (char*) "view2.bmp");
+	}
+	else
+	{
+	  raytracer.render(width, height, eye2, view3, up, fov, (char*) "view2.bmp");
+	}
 	
 	return 0;
 }
