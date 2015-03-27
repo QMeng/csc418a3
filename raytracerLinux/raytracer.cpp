@@ -199,16 +199,16 @@ void Raytracer::computeShading( Ray3D& ray ) {
 		#ifdef SHADOWS
 			/* HARD SHADOWS */
 			// cast a ray out from the light to the object and see if the intersection is the same one found by the current ray. If not, its in shadow, so we skip shading
-	    	Vector3D lightToObject = ray.intersection.point - lightSource->get_position();
-	    	lightToObject.normalize();
-	    	Ray3D rayLightToObjectWorldSpace = Ray3D(lightSource->get_position(), lightToObject);
-	    	traverseScene(_root, rayLightToObjectWorldSpace);
-	    	if (rayLightToObjectWorldSpace.intersection.point == ray.intersection.point) {
-				lightSource->shade(ray);
-	    	}
-	    #else 
-	    	lightSource->shade(ray);
-	    #endif
+		Vector3D lightToObject = ray.intersection.point - lightSource->get_position();
+		lightToObject.normalize();
+		Ray3D rayLightToObjectWorldSpace = Ray3D(lightSource->get_position(), lightToObject);
+		traverseScene(_root, rayLightToObjectWorldSpace);
+		if (rayLightToObjectWorldSpace.intersection.point == ray.intersection.point) {
+			lightSource->shade(ray);
+		}
+		#else 
+		lightSource->shade(ray);
+		#endif
 
 		curLight = curLight->next;
 	}
@@ -384,7 +384,7 @@ void Raytracer::render(int width, int height, Point3D eye, Vector3D view, Vector
 			imagePlane[1] = (-double(height)/2 + 0.5 + i)/factor;
 			imagePlane[2] = -1;
 
-#ifdef DOF
+			#ifdef DOF
 			Colour col;
 			// Cast ray from center of eye (center of aperture), through pixel of interest
 			// to the focus plane.
@@ -411,14 +411,14 @@ void Raytracer::render(int width, int height, Point3D eye, Vector3D view, Vector
 		      
 			// Find the final average colour
 			col = (double) 1.0 / NUM_APERTURE_RAYS * col;
-	      #else
+			#else
 			// TODO: Convert ray to world space and call 
 			// shadeRay(ray) to generate pixel colour.         
 			Ray3D rayViewSpace(origin, imagePlane - origin);
 			Ray3D rayWorldSpace(viewToWorld * rayViewSpace.origin, viewToWorld * rayViewSpace.dir);
 			
 			Colour col = shadeRay(rayWorldSpace, SHADE_DEPTH); 
-	      #endif
+			#endif
 			_rbuffer[i*width+j] = int(col[0]*255);
 			_gbuffer[i*width+j] = int(col[1]*255);
 			_bbuffer[i*width+j] = int(col[2]*255);
@@ -494,8 +494,8 @@ Material weird( Colour(0.4, 0, 0.7), Colour(0.1, 0.445, 0.95),
                 Colour(0.228, 0.628, 0.58), 
                 12.0 );
 Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0),        
-        Colour(0.0, 0.0, 0.0),                                       
-        0.0 );                                                       
+		Colour(0.0, 0.0, 0.0),                                       
+		0.0 );                                                       
 
 /* The default scene, given with the assignment */
 void defaultScene(Raytracer& raytracer) {
@@ -543,6 +543,10 @@ void spaceInvaders(Raytracer& raytracer) {
 	SceneDagNode* space_invaderMiddleRight = raytracer.loadTriangeMesh("space_invader.stl", &gold);
 	raytracer.translate(space_invaderMiddleRight, Vector3D(13, 10, -65));
 	raytracer.scale(space_invaderMiddleRight, Point3D(0, 0, 0), factor);
+	
+	SceneDagNode* space_invaderMiddleUp= raytracer.loadTriangeMesh("space_invader.stl", &gold);
+	raytracer.translate(space_invaderMiddleUp, Vector3D(-7, 15, -70));
+	raytracer.scale(space_invaderMiddleUp, Point3D(0, 0, 0), factor);
 
 	SceneDagNode* wall = raytracer.addObject( new UnitSquare(), &jade );
 	raytracer.translate(wall, Vector3D(0, 0, -80));
@@ -715,7 +719,7 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	Scene scene = SHAPE_SCENE;
+	Scene scene = SPACE_INVADERS;
 	/* Define scene objects and transformations here */
 	switch(scene) {
 		case DEFAULT:
