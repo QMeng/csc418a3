@@ -35,11 +35,11 @@
 /* A list of scenes we know how to render */
 enum Scene {
 	DEFAULT,
-	SPACE_INVADERS,
-	SHAPE_SCENE,
-	QUADRATIC_SCENE,
-	REFRACTION_DEMO,
-	DOF_DEMO
+	MESH_SCENE,
+	SOFTSHADOW_SCENE,
+	CYLINDERCONE_SCENE,
+	REFRACTION_SCENE,
+	DOF_SCENE
 };
 
 // Linked list containing light sources in the scene.

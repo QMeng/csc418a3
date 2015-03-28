@@ -20,7 +20,6 @@
 #include <vector>
 #include <assert.h>
 #include "areaLight.h"
-#include <vector>
 #include <iomanip>
 #include <locale>
 #include <sstream>
@@ -197,8 +196,9 @@ void Raytracer::computeShading( Ray3D& ray ) {
 
 		// Implement shadows here if needed.
 		#ifdef SHADOWS
-			/* HARD SHADOWS */
-			// cast a ray out from the light to the object and see if the intersection is the same one found by the current ray. If not, its in shadow, so we skip shading
+		/* HARD SHADOWS */
+		// cast a ray out from the light to the object and see if the intersection is the same one found by the current ray. 
+		// If not, its in shadow, so we skip shading
 		Vector3D lightToObject = ray.intersection.point - lightSource->get_position();
 		lightToObject.normalize();
 		Ray3D rayLightToObjectWorldSpace = Ray3D(lightSource->get_position(), lightToObject);
@@ -376,8 +376,6 @@ void Raytracer::render(int width, int height, Point3D eye, Vector3D view, Vector
 
 	for (int i = 0; i < _scrHeight; i++) {
 		for (int j = 0; j < _scrWidth; j++) {
-			// Sets up ray origin and direction in view space, 
-			// image plane is at z = -1.
 			Point3D origin(0, 0, 0);
 			Point3D imagePlane;
 			imagePlane[0] = (-double(width)/2 + 0.5 + j)/factor;
@@ -453,16 +451,16 @@ SceneDagNode* Raytracer::loadTriangeMesh(string filename, Material* material) {
 		ss >> a >> b >> c;
 		coords.push_back(Point3D(a, b, c));
 	}
+
 	SceneDagNode* meshContainer = addObject( new NullObject(), material );
 
 	// format: normal, 3 coords, normal, 3 coords etc.
 	assert(coords.size() % 4 == 0);
 	for (unsigned int i = 0; i < coords.size(); i+=4) {
-		UnitTriangle* myTriangle = new UnitTriangle(
-					 Vector3D (coords[i] - Point3D(0, 0, 0)),
-					 Point3D  (coords[i+1]),
-					 Point3D  (coords[i+2]),
-					 Point3D  (coords[i+3]));
+		UnitTriangle* myTriangle = new UnitTriangle(Vector3D (coords[i] - Point3D(0, 0, 0)),
+					 								Point3D  (coords[i+1]),
+					 								Point3D  (coords[i+2]),
+					 								Point3D  (coords[i+3]));
         addObject(meshContainer, myTriangle, material);
     }
 
@@ -500,6 +498,7 @@ Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0),
 /* The default scene, given with the assignment */
 void defaultScene(Raytracer& raytracer) {
       // Defines a point light source.
+	  raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
       raytracer.addLightSource( new PointLight(Point3D(0, 0, 5), Colour(0.9, 0.9, 0.9) ) );
 	
       // Add a unit square into the scene with material mat.
@@ -520,7 +519,7 @@ void defaultScene(Raytracer& raytracer) {
 
 }
 
-void spaceInvaders(Raytracer& raytracer) {
+void meshScene(Raytracer& raytracer) {
 
 	// Define ambient lighting
 	raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
@@ -554,7 +553,7 @@ void spaceInvaders(Raytracer& raytracer) {
 
 }
 
-void shapeScene(Raytracer& raytracer) {
+void softshadowScene(Raytracer& raytracer) {
 
     // Defines a point light source.
     raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
@@ -568,6 +567,8 @@ void shapeScene(Raytracer& raytracer) {
 
     SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
     SceneDagNode* cylinder = raytracer.addObject( new UnitCylinder(), &weird );
+    SceneDagNode* cylinder2 = raytracer.addObject( new UnitCylinder(), &weird );
+    
     //SceneDagNode* cylinderUp = raytracer.addObject( new UnitCylinder(), &blue);
 
     // Apply some transformations to the unit square.
@@ -592,6 +593,9 @@ void shapeScene(Raytracer& raytracer) {
 
     raytracer.scale(cylinder, Point3D(0, 0, 0), factor3);
     raytracer.translate(cylinder, Vector3D(-1, -1, -1));
+
+    raytracer.scale(cylinder2, Point3D(0, 0, 0), factor3);
+    raytracer.translate(cylinder2, Vector3D(-1, -4, -10));
     
     //raytracer.scale(cylinder, Point3D(0, 0, 0), factor3);
     //raytracer.translate(cylinder, Vector3D(0, -1, -3));
@@ -601,7 +605,7 @@ void shapeScene(Raytracer& raytracer) {
     raytracer.scale(plane, Point3D(0, 0, 0), factor2);
 }
 
-void quadraticScene(Raytracer& raytracer) {
+void cylinderConeScene(Raytracer& raytracer) {
     // Defines a point light source.
     raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
     // Defines a point light source.
@@ -614,11 +618,15 @@ void quadraticScene(Raytracer& raytracer) {
     SceneDagNode* cone2 = raytracer.addObject( new UnitCone(), &red );
     SceneDagNode* cylinder2 = raytracer.addObject( new UnitCylinder(), &blue );
     SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
+    SceneDagNode* cylinder3 = raytracer.addObject( new UnitCylinder(), &red);
 
 
     double cylinder_scale[3] = { 1.0, 2.0, 1.0 };
     double cone_scale[3] = { 2.0, 5.0, 2.0 };
     double factor2[3] = { 100.0, 100.0, 6.0 };
+
+    raytracer.translate(cylinder3, Vector3D(0, 0, -5));
+    raytracer.scale(cylinder3, Point3D(0, 0, 0), cylinder_scale);
 
     raytracer.translate(cylinder1, Vector3D(3, -2, -5));
     raytracer.scale(cylinder1, Point3D(0, 0, 0), cylinder_scale);
@@ -635,7 +643,7 @@ void quadraticScene(Raytracer& raytracer) {
 
 }
 
-void refractionDemo(Raytracer& raytracer ){
+void refractionScene(Raytracer& raytracer ){
 
     // Defines a point light source.
     raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
@@ -679,7 +687,7 @@ void refractionDemo(Raytracer& raytracer ){
 }
 
 
-void dofDemo(Raytracer& raytracer ){
+void dofScene(Raytracer& raytracer ){
     // Defines a point light source.
     raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
     raytracer.addLightSource( new PointLight(Point3D(0, 0, 5),
@@ -724,28 +732,28 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	Scene scene = SHAPE_SCENE;
+	Scene scene = REFRACTION_SCENE;
 	int si = 0;
 	/* Define scene objects and transformations here */
 	switch(scene) {
 		case DEFAULT:
 			defaultScene(raytracer);
 			break;
-		case SPACE_INVADERS:
-			spaceInvaders(raytracer);
+		case MESH_SCENE:
+			meshScene(raytracer);
 			si = 1;
 			break;
-		case SHAPE_SCENE:
-			shapeScene(raytracer);
+		case SOFTSHADOW_SCENE:
+			softshadowScene(raytracer);
 			break;
-		case QUADRATIC_SCENE:
-			quadraticScene(raytracer);
+		case CYLINDERCONE_SCENE:
+			cylinderConeScene(raytracer);
 			break;
-		case DOF_DEMO:
-			dofDemo(raytracer);
+		case DOF_SCENE:
+			dofScene(raytracer);
 			break;
-		case REFRACTION_DEMO:
-			refractionDemo(raytracer);
+		case REFRACTION_SCENE:
+			refractionScene(raytracer);
 			break;
 		default:
 			throw "No scene set";

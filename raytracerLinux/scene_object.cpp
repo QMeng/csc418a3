@@ -127,32 +127,27 @@ bool NullObject::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 UnitTriangle::UnitTriangle(Vector3D norm, Point3D a, Point3D b, Point3D c) : n(norm), p0(a), p1(b), p2(c) {}
 
 bool UnitTriangle::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
-		const Matrix4x4& modelToWorld ) {
+		const Matrix4x4& modelToWorld ) 
+{
 
-	bool occured = false;
 	bool overwrite = false;
 
-	Ray3D rayModelSpace = Ray3D(worldToModel * ray.origin, worldToModel * ray.dir);
+	Ray3D raySpace = Ray3D(worldToModel * ray.origin, worldToModel * ray.dir);
 
-	double denom = rayModelSpace.dir.dot(n);
+	double denom = raySpace.dir.dot(n);
 	if (isSameDouble(denom,0)) {
 		return false;
 	}
-	double t_value = -(rayModelSpace.origin - p0).dot(n) / denom;
-	Point3D planeIntersect = rayModelSpace.point_at(t_value);
+	double t_value = -(raySpace.origin - p0).dot(n) / denom;
+	Point3D planeIntersect = raySpace.point_at(t_value);
 
 	// see if the point is contained in the 3 half planes
 	if (((p1 - p0).cross(planeIntersect - p0)).dot(n) >= 0 &&
 		((p2 - p1).cross(planeIntersect - p1)).dot(n) >= 0 &&
-		((p0 - p2).cross(planeIntersect - p2)).dot(n) >= 0) {
-		occured = true;
-	}
-
-	if (t_value <= 0) {
-		occured = false;
-	}		
-
-	if (occured && (ray.intersection.none || t_value < ray.intersection.t_value)) {
+		((p0 - p2).cross(planeIntersect - p2)).dot(n) >= 0
+		&& (t_value > 0)
+		&& (ray.intersection.none || t_value < ray.intersection.t_value)) 
+	{
 		overwrite = true;
 		ray.intersection.normal = n;
 		ray.intersection.point = modelToWorld * planeIntersect;
@@ -160,7 +155,7 @@ bool UnitTriangle::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		ray.intersection.none = false;
 	}
 	
-	return occured && overwrite;
+	return overwrite;
 }
 
 bool inUnitCircle(Point3D point) {
@@ -173,8 +168,6 @@ bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld ) {
 
 	// a cylinder: unit circle in xz plane, y from -0.5 to 0.5
-
-	bool occured = false;
 	bool overwrite = false;
 	bool hit_top = false;
 	bool hit_bottom = false;
@@ -183,20 +176,21 @@ bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Ray3D rayModelSpace = Ray3D(worldToModel * ray.origin, worldToModel * ray.dir);
 	vector<double> possible_t_values;
 
-	double dx = rayModelSpace.dir[0];
-	double dy = rayModelSpace.dir[1];
-	double dz = rayModelSpace.dir[2];
-
 	double px = rayModelSpace.origin[0];
 	double py = rayModelSpace.origin[1];
 	double pz = rayModelSpace.origin[2];
+
+	double dx = rayModelSpace.dir[0];
+	double dy = rayModelSpace.dir[1];
+	double dz = rayModelSpace.dir[2];
 
 	double a = pow(dx, 2) + pow(dz, 2);
 	double b = 2 * (px * dx + pz * dz);
 	double c = pow(px, 2) + pow(pz, 2) - 1.0;
 
 	double discriminant_val = (b * b) - (4 * a * c);
-	if (discriminant_val >= 0) { // real roots -> intersection
+	if (discriminant_val >= 0) 
+	{
 		double root1, root2;
 		quadSolve(a, b, c, root1, root2);
 		if (root1 > 0) {
@@ -206,40 +200,47 @@ bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			possible_t_values.push_back(root2);
 		}
 	}
+
 	// check top and bottom also:
 	double t_top = (0.5 - py) / dy;
 	double t_bottom = (-0.5 - py) / dy;
+
 	if (inUnitCircle(rayModelSpace.point_at(t_top))) {
 		possible_t_values.push_back(t_top);	
 	}
+
 	if (inUnitCircle(rayModelSpace.point_at(t_bottom))) {
 		possible_t_values.push_back(t_bottom);	
 	}
 	
-	// we want the smallest t value that is greater than 0 and meets the height requirements:
+	// smallest t value that is greater than 0 and meets the height requirements:
 	std::vector<double> qualifying_t_values;
 	for(unsigned int i = 0; i < possible_t_values.size(); i++) {
-		double t = possible_t_values[i];
+		double t = possible_t_values.at(i);
 	    if (t > 0) {
 	    	Point3D point = rayModelSpace.point_at(t);
 	    	double y_val = point[1];
 	    	if ((y_val >= -0.5) && (y_val <= 0.5)) {
-			qualifying_t_values.push_back(t);
+				qualifying_t_values.push_back(t);
 	    	}
 	    }
 	}
-	occured = qualifying_t_values.size() > 0;
-	if (occured) {
+
+	if (qualifying_t_values.size() > 0) {
 		t_value = *std::min_element(qualifying_t_values.begin(), qualifying_t_values.end());
 		if (isSameDouble(t_value, t_top)) {
 			hit_top = true;
-		} else if (isSameDouble(t_value, t_bottom)) {
+		}
+
+		if (isSameDouble(t_value, t_bottom)) {
 			hit_bottom = true;
 		} 
 	}
 	
 
-	if (occured && (ray.intersection.none || t_value < ray.intersection.t_value)) {
+	if ((qualifying_t_values.size() > 0) 
+		&& (ray.intersection.none || t_value < ray.intersection.t_value))
+	{
 		overwrite = true;
 		Point3D intersectionPointModelSpace = rayModelSpace.point_at(t_value);
 		ray.intersection.point = modelToWorld * intersectionPointModelSpace;
@@ -257,7 +258,7 @@ bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		ray.intersection.none = false;
 	}
 
-	return occured && overwrite;
+	return overwrite;
 }
 
 bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
@@ -265,7 +266,6 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 
 	// a cone: unit circle in xz plane, y from 0 to 1
 
-	bool occured = false;
 	bool overwrite = false;
 	bool hit_bottom = false;
 
@@ -273,20 +273,20 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	Ray3D rayModelSpace = Ray3D(worldToModel * ray.origin, worldToModel * ray.dir);
 	vector<double> possible_t_values;
 
-	double dx = rayModelSpace.dir[0];
-	double dy = rayModelSpace.dir[1];
-	double dz = rayModelSpace.dir[2];
-
 	double px = rayModelSpace.origin[0];
 	double py = rayModelSpace.origin[1];
 	double pz = rayModelSpace.origin[2];
+
+	double dx = rayModelSpace.dir[0];
+	double dy = rayModelSpace.dir[1];
+	double dz = rayModelSpace.dir[2];
 
 	double a = pow(dx, 2) + pow(dz, 2) - pow(dy, 2);
 	double b = 2 * (px * dx + pz * dz) + 2 * dy - 2 * dy * py;
 	double c = pow(px, 2) + pow(pz, 2) - pow(py, 2) - 1.0 + 2.0 * py;
 
 	double discriminant_val = (b * b) - (4 * a * c);
-	if (discriminant_val >= 0) { // real roots -> intersection
+	if (discriminant_val >= 0) {
 		double root1, root2;
 		quadSolve(a, b, c, root1, root2);
 		if (root1 > 0) {
@@ -296,6 +296,7 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 			possible_t_values.push_back(root2);
 		}
 	}
+
 	// check bottom also:
 	double t_bottom = -py / dy;
 	if (inUnitCircle(rayModelSpace.point_at(t_bottom))) {
@@ -314,8 +315,8 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	    	}
 	    }
 	}
-	occured = qualifying_t_values.size() > 0;
-	if (occured) {
+	
+	if (qualifying_t_values.size() > 0) {
 		t_value = *std::min_element(qualifying_t_values.begin(), qualifying_t_values.end());
 		if (isSameDouble(t_value, t_bottom)) {
 			hit_bottom = true;
@@ -323,7 +324,9 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	}
 	
 
-	if (occured && (ray.intersection.none || t_value < ray.intersection.t_value)) {
+	if ((qualifying_t_values.size() > 0) 
+		&& (ray.intersection.none || t_value < ray.intersection.t_value)) 
+	{
 		overwrite = true;
 		Point3D intersectionPointModelSpace = rayModelSpace.point_at(t_value);
 		ray.intersection.point = modelToWorld * intersectionPointModelSpace;
@@ -339,7 +342,7 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		ray.intersection.none = false;
 	}
 
-	return occured && overwrite;
+	return overwrite;
 }
 
 
