@@ -18,15 +18,8 @@
 #include "scene_object.h"
 #include "light_source.h"
 
-/* Feature tags */
-#define SHADOWS // turns on shadows. don't use in combo with soft shadows
-// warn: mildly expensive
-// #define SOFT_SHADOWS // turns on soft shadows. don't use in combo with hard shadows
-// warn: extremely expensive
-// #define DOF // turns on depth of field
-
 /* Feature params */
-#define SHADE_DEPTH 20 // controls how many rays to cast from an intersection for reflection and refraction
+#define SHADE_DEPTH 2 // controls how many rays to cast from an intersection for reflection and refraction
 #define NUM_SHADOW_RAYS 50 // how many rays to cast if soft shadows are enbaled
 #define FOCAL_DISTANCE      -5
 #define NUM_APERTURE_RAYS   200
@@ -112,7 +105,7 @@ public:
 			Material* mat );
 
 	// load a triangle mesh object specified by the filename. Each triange is of the material passed in.
-	SceneDagNode* loadTriangeMesh(std::string filename, Material* material);
+	SceneDagNode* addMesh(std::string filename, Material* material);
 
 	// Add a light source.
 	LightListNode* addLightSource( LightSource* light );
@@ -142,6 +135,9 @@ public:
 		traverseScene(node, ray, modelToWorld, worldToModel);
 	}
 	
+	void dofColor(Colour col, Point3D imagePlane, Point3D origin, Matrix4x4 viewToWorld);
+	void doRefraction(Ray3D ray, Colour col, int depth);
+
 private:
 
 	// Allocates and initializes the pixel buffer for rendering, you
