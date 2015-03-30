@@ -26,6 +26,10 @@
 #include <string>
 
 using namespace std;
+
+//#define SOFT_SHADOWS 				//remove comment to active soft shadow
+//#define SHADOWS        			//remove comment to active hard shadow
+//#define DOF   					//remove comment to active depth of focus
  
 Raytracer::Raytracer() : _lightSource(NULL) {
 	_root = new SceneDagNode();
@@ -196,9 +200,6 @@ void Raytracer::computeShading( Ray3D& ray ) {
 
 		// Implement shadows here if needed.
 		#ifdef SHADOWS
-		/* HARD SHADOWS */
-		// cast a ray out from the light to the object and see if the intersection is the same one found by the current ray. 
-		// If not, its in shadow, so we skip shading
 		Vector3D lightToObject = ray.intersection.point - lightSource->get_position();
 		lightToObject.normalize();
 		Ray3D rayLightToObjectWorldSpace = Ray3D(lightSource->get_position(), lightToObject);
@@ -212,7 +213,7 @@ void Raytracer::computeShading( Ray3D& ray ) {
 
 		curLight = curLight->next;
 	}
-	// even points in shadows get ambient lighting
+	// points in shadows get ambient lighting
 	if (LightSource::RENDER_TYPE != SCENE_SIGNATURE) {
 		Colour col = ray.col + ray.intersection.mat->ambient * ambientLight;
 		col.clamp();
@@ -273,28 +274,30 @@ Colour Raytracer::shadeRay( Ray3D& ray, int depth) {
 	Colour col(0.0, 0.0, 0.0); 
 
 	if (depth <= 0) {
-		return col;
+		return ray.col;
 	}
 
-	traverseScene(_root, ray); 
-	
+	traverseScene(_root, ray); 	
 	// Don't bother shading if the ray didn't hit 
 	// anything.
 	if (!ray.intersection.none) {
 		computeShading(ray); 
 		col = ray.col;
-
 	// You'll want to call shadeRay recursively (with a different ray, 
 	// of course) here to implement reflection/refraction effects.  
 
 		// Refraction effects:
 		if (ray.intersection.mat->isDieletric()) {
-			// algorithm from textbook for dieletrics
 			Vector3D d = ray.dir;
 			d.normalize();
 			Vector3D n = ray.intersection.normal;
 			n.normalize();
 
+			double c, kr, kg, kb;
+			Colour k;
+			Vector3D t;
+
+			Vector3D r;
 			reflect(d, n, r);
 
 			bool totalInternalReflection = false;
@@ -317,11 +320,12 @@ Colour Raytracer::shadeRay( Ray3D& ray, int depth) {
 				if (refract(d, -n, 1.0 / ray.intersection.mat->indexOfRefraction, t)) {
 					c = t.dot(n);
 				}
-				else {
+                else {
 				    col = col + k * shadeRay(reflectionRay, depth - 1);
-					totalInternalReflection = true;
+					totalInternalReflection = true;	
 				}
 			}
+
 			if (!totalInternalReflection) {
 				Ray3D transmittedRay = Ray3D(ray.intersection.point + EPSILON * t, t);
 				double r0 = pow(ray.intersection.mat->indexOfRefraction - 1, 2) / pow(ray.intersection.mat->indexOfRefraction + 1, 2);
@@ -330,7 +334,9 @@ Colour Raytracer::shadeRay( Ray3D& ray, int depth) {
 				Colour refract = (1 - R) * shadeRay(transmittedRay, depth - 1);
 				col = col + k * (refract + reflect);
 			}
-			// material wasn't refractive, but it is reflective:
+		
+
+		// material wasn't refractive, but it is reflective:
 		} else if (!(ray.intersection.mat->specular == Colour(0, 0, 0))) {
 			Vector3D oppositeRayDir = -ray.dir;
 			oppositeRayDir.normalize();
@@ -356,7 +362,6 @@ Colour Raytracer::shadeRay( Ray3D& ray, int depth) {
 double fRand(double fMin, double fMax)
 {
     double f = (double)rand() / RAND_MAX;
-//    cout << "f is " << f << endl;
     return fMin + f * (fMax - fMin);
 }
  
@@ -365,13 +370,14 @@ void Raytracer::render(int width, int height, Point3D eye, Vector3D view, Vector
 	_scrWidth = width;
 	_scrHeight = height;
 	Matrix4x4 viewToWorld;
+	Colour col;
 
 	double factor = (double(height)/2)/tan(fov*M_PI/360.0);
 	
 	initPixelBuffer();
 	
-	double z_focus_intersect = FOCAL_DISTANCE;
-	double x_focus_intersect, y_focus_intersect;
+	double z_f = FOCAL_DISTANCE;
+	double x_f, y_f;
 	viewToWorld = initInvViewMatrix(eye, view, up);
 
 	for (int i = 0; i < _scrHeight; i++) {
@@ -382,18 +388,16 @@ void Raytracer::render(int width, int height, Point3D eye, Vector3D view, Vector
 			imagePlane[1] = (-double(height)/2 + 0.5 + i)/factor;
 			imagePlane[2] = -1;
 
-			#ifdef DOF
-			Colour col;
-			// Cast ray from center of eye (center of aperture), through pixel of interest
+			#ifdef DOF			// Cast ray from center of eye (center of aperture), through pixel of interest
 			// to the focus plane.
 			// Find point of intersection.
 			Vector3D ray_dir = imagePlane - origin;
 			ray_dir.normalize();
-			double t_intersect = z_focus_intersect / ray_dir[2];
-			double x_focus_intersect = t_intersect * ray_dir[0];
-			double y_focus_intersect = t_intersect * ray_dir[1]; 
+			double t_intersect = z_f / ray_dir[2];
+			double x_f = t_intersect * ray_dir[0];
+			double y_f = t_intersect * ray_dir[1]; 
 			
-			Point3D focus_point(x_focus_intersect, y_focus_intersect, z_focus_intersect);
+			Point3D focus_point(x_f, y_f, z_f);
 
 			// Randomly cast rays from within aperture towards the focus point and capture color.
 			for (int k = 0; k < NUM_APERTURE_RAYS; k++) {
@@ -411,11 +415,11 @@ void Raytracer::render(int width, int height, Point3D eye, Vector3D view, Vector
 			col = (double) 1.0 / NUM_APERTURE_RAYS * col;
 			#else
 			// TODO: Convert ray to world space and call 
-			// shadeRay(ray) to generate pixel colour.         
+			// shadeRay(ray) to generate pixel colour.       
 			Ray3D rayViewSpace(origin, imagePlane - origin);
 			Ray3D rayWorldSpace(viewToWorld * rayViewSpace.origin, viewToWorld * rayViewSpace.dir);
 			
-			Colour col = shadeRay(rayWorldSpace, SHADE_DEPTH); 
+			col = shadeRay(rayWorldSpace, SHADE_DEPTH); 
 			#endif
 			_rbuffer[i*width+j] = int(col[0]*255);
 			_gbuffer[i*width+j] = int(col[1]*255);
@@ -429,6 +433,7 @@ void Raytracer::render(int width, int height, Point3D eye, Vector3D view, Vector
 void Raytracer::setAmbientLight(Colour colour) {
 	ambientLight = colour;
 }
+
 Colour Raytracer::getAmbientLight() {
 	return ambientLight;
 }
@@ -492,8 +497,8 @@ Material weird( Colour(0.4, 0, 0.7), Colour(0.1, 0.445, 0.95),
                 Colour(0.228, 0.628, 0.58), 
                 12.0 );
 Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0),        
-		Colour(0.0, 0.0, 0.0),                                       
-		0.0 );                                                       
+				Colour(0.0, 0.0, 0.0),                                       
+				0.0 );                                                       
 
 /* The default scene, given with the assignment */
 void defaultScene(Raytracer& raytracer) {
@@ -532,18 +537,18 @@ void meshScene(Raytracer& raytracer) {
 	double wallFactor[3] = { 100.0, 100.0, 100.0 };
 
 	// Middle Row 
-	SceneDagNode* space_invaderMiddleMiddle = raytracer.loadTriangeMesh("space_invader.stl", &gold);
+	SceneDagNode* space_invaderMiddleMiddle = raytracer.loadTriangeMesh("cube.stl", &gold);
 	raytracer.translate(space_invaderMiddleMiddle, Vector3D(0, 25, -70));
 	raytracer.scale(space_invaderMiddleMiddle, Point3D(0, 0, 0), factor);
-	SceneDagNode* space_invaderMiddleLeft = raytracer.loadTriangeMesh("space_invader.stl", &gold);
+	SceneDagNode* space_invaderMiddleLeft = raytracer.loadTriangeMesh("cube.stl", &gold);
 	raytracer.translate(space_invaderMiddleLeft, Vector3D(-13, 10, -75));
 	raytracer.scale(space_invaderMiddleLeft, Point3D(0, 0, 0), factor);
 
-	SceneDagNode* space_invaderMiddleRight = raytracer.loadTriangeMesh("space_invader.stl", &gold);
+	SceneDagNode* space_invaderMiddleRight = raytracer.loadTriangeMesh("cube.stl", &gold);
 	raytracer.translate(space_invaderMiddleRight, Vector3D(13, 10, -65));
 	raytracer.scale(space_invaderMiddleRight, Point3D(0, 0, 0), factor);
 	
-	SceneDagNode* space_invaderMiddleUp= raytracer.loadTriangeMesh("space_invader.stl", &gold);
+	SceneDagNode* space_invaderMiddleUp= raytracer.loadTriangeMesh("cube.stl", &gold);
 	raytracer.translate(space_invaderMiddleUp, Vector3D(-7, 15, -70));
 	raytracer.scale(space_invaderMiddleUp, Point3D(0, 0, 0), factor);
 
@@ -651,13 +656,14 @@ void refractionScene(Raytracer& raytracer ){
                 Colour(0.9, 0.9, 0.9)) );
     raytracer.addLightSource( new PointLight(Point3D(0, 5, -5),
                 Colour(0.4, 0.4, 0.4)) );
-    glass.indexOfRefraction = 1.05;
 
+    glass.indexOfRefraction = 1.05;
 
     // Add a unit square into the scene with material mat.
     SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &glass );
     SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &jade );
     SceneDagNode* sphere3 = raytracer.addObject( new UnitSphere(), &glass );
+    SceneDagNode* sphere4 = raytracer.addObject( new UnitSphere(), &glass );
     SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &gold );
     SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &weird );
     SceneDagNode* plane3 = raytracer.addObject( new UnitSquare(), &shiny );
@@ -673,6 +679,8 @@ void refractionScene(Raytracer& raytracer ){
     raytracer.scale(sphere2, Point3D(0, 0, 0), factor1);
     raytracer.translate(sphere3, Vector3D(-1, -1, -3.5));
     raytracer.scale(sphere3, Point3D(0, 0, 0), factor3);
+    raytracer.translate(sphere4, Vector3D(1, 1, -4));
+    raytracer.scale(sphere4, Point3D(0, 0, 0), factor1);
 
     raytracer.translate(plane, Vector3D(0, 0, -10));
     raytracer.scale(plane, Point3D(0, 0, 0), factor2);

@@ -26,7 +26,7 @@
 // #define DOF // turns on depth of field
 
 /* Feature params */
-#define SHADE_DEPTH 2 // controls how many rays to cast from an intersection for reflection and refraction
+#define SHADE_DEPTH 20 // controls how many rays to cast from an intersection for reflection and refraction
 #define NUM_SHADOW_RAYS 50 // how many rays to cast if soft shadows are enbaled
 #define FOCAL_DISTANCE      -5
 #define NUM_APERTURE_RAYS   200

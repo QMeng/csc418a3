@@ -199,6 +199,7 @@ public:
 	Colour col;
 	// returns the point at a given t value
 	Point3D point_at(double t_value);
+	
 };
 
 #endif
