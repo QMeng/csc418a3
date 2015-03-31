@@ -110,9 +110,6 @@ public:
 	// Add a light source.
 	LightListNode* addLightSource( LightSource* light );
 
-	void setAmbientLight(Colour colour);
-	Colour getAmbientLight();
-
 	// Transformation functions are implemented by right-multiplying 
 	// the transformation matrix to the node's transformation matrix.
 	
@@ -128,15 +125,17 @@ public:
 	SceneDagNode *_root;
 	// Traversal code for the scene graph, the ray is transformed into 
 	// the object space of each node where intersection is performed.
-	void traverseScene( SceneDagNode* node, Ray3D& ray, Matrix4x4 modelToWorld, Matrix4x4 worldToModel );
-	void traverseScene( SceneDagNode* node, Ray3D& ray ) {
-		Matrix4x4 modelToWorld;
-		Matrix4x4 worldToModel;
-		traverseScene(node, ray, modelToWorld, worldToModel);
-	}
+	//void traverseScene( SceneDagNode* node, Ray3D& ray, Matrix4x4 modelToWorld, Matrix4x4 worldToModel );
+	void traverseScene( SceneDagNode* node, Ray3D& ray ); //{
+		//Matrix4x4 modelToWorld;
+		//Matrix4x4 worldToModel;
+		//traverseScene(node, ray, modelToWorld, worldToModel);
+	//}
 	
 	void dofColor(Colour col, Point3D imagePlane, Point3D origin, Matrix4x4 viewToWorld);
 	void doRefraction(Ray3D ray, Colour col, int depth);
+
+	Colour ambient;
 
 private:
 
@@ -173,8 +172,10 @@ private:
 	unsigned char* _gbuffer;
 	unsigned char* _bbuffer;
 
-	// There should only be one ambient light, so might as well put it here
-	Colour ambientLight;
+	// Maintain global transformation matrices similar to OpenGL's matrix
+	// stack.  These are used during scene traversal. 
+	Matrix4x4 _modelToWorld;
+	Matrix4x4 _worldToModel;
 
 };
 

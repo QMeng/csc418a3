@@ -29,7 +29,7 @@ using namespace std;
 
 //#define SOFT_SHADOWS 				//remove comment to active soft shadow
 #define SHADOWS        			//remove comment to active hard shadow
-//#define DOF   					//remove comment to active depth of focus
+#define DOF   					//remove comment to active depth of focus
  
 Raytracer::Raytracer() : _lightSource(NULL) {
 	_root = new SceneDagNode();
@@ -167,25 +167,34 @@ Matrix4x4 Raytracer::initInvViewMatrix( Point3D eye, Vector3D view,
 	return mat; 
 }
 
-void Raytracer::traverseScene( SceneDagNode* node, Ray3D& ray, Matrix4x4 modelToWorld, Matrix4x4 worldToModel ) {
+void Raytracer::traverseScene( SceneDagNode* node, Ray3D& ray) { //, Matrix4x4 modelToWorld, Matrix4x4 worldToModel ) {
 	SceneDagNode *childPtr;
 
 	// Applies transformation of the current node to the global
 	// transformation matrices.
-	Matrix4x4 newModelToWorld = modelToWorld*node->trans;
-	Matrix4x4 newWorldToModel = node->invtrans*worldToModel; 
+	//Matrix4x4 newModelToWorld = modelToWorld*node->trans;
+	//Matrix4x4 newWorldToModel = node->invtrans*worldToModel; 
+
+	_modelToWorld = _modelToWorld*node->trans;
+	_worldToModel = node->invtrans*_worldToModel;
+
 	if (node->obj) {
 		// Perform intersection.
-		if (node->obj->intersect(ray, newWorldToModel, newModelToWorld)) {
+		if (node->obj->intersect(ray, _worldToModel, _modelToWorld)) {
 			ray.intersection.mat = node->mat;
 		}
 	}
 	// Traverse the children.
 	childPtr = node->child;
 	while (childPtr != NULL) {
-		traverseScene(childPtr, ray, newModelToWorld, newWorldToModel);
+		traverseScene(childPtr, ray); //, newModelToWorld, newWorldToModel);
 		childPtr = childPtr->next;
 	}
+
+	// Removes transformation of the current node from the global
+	// transformation matrices.
+	_worldToModel = node->trans*_worldToModel;
+	_modelToWorld = _modelToWorld*node->invtrans;
 
 }
 
@@ -215,7 +224,7 @@ void Raytracer::computeShading( Ray3D& ray ) {
 	}
 	// points in shadows get ambient lighting
 	if (LightSource::RENDER_TYPE != SCENE_SIGNATURE) {
-		Colour col = ray.col + ray.intersection.mat->ambient * ambientLight;
+		Colour col = ray.col + ray.intersection.mat->ambient * ambient;
 		col.clamp();
 		ray.col = col;
 	}
@@ -240,27 +249,6 @@ void Raytracer::flushPixelBuffer( char *file_name ) {
 	delete _rbuffer;
 	delete _gbuffer;
 	delete _bbuffer;
-}
-
-/* Put the reflected direction in r */
-void reflect(Vector3D& d, Vector3D& n, Vector3D& r) {
-	r = d - (2 * (d.dot(n)) * n);
-	r.normalize();
-}
-
-/* Put the refracted direction in t. Returns false if total internal refraction */
-bool refract(Vector3D d, Vector3D n, double n1, Vector3D& t) {
-	double ddotn = d.dot(n);
-	double n2 = 1.0; // assume air - basically all refractive objects are hollow
-	double sqrtTerm = sqrt(1.0 - ((pow(n1, 2) * (1 - pow(ddotn, 2))) / pow(n2, 2)));
-	if (sqrtTerm < 0) {
-		return false;
-	} 
-	Vector3D term1 = (1 / n2) * (n1 * (d - (ddotn * n)));
-	Vector3D term2 = sqrtTerm * n;
-	t = term1 - term2;
-	t.normalize();
-	return true;
 }
 
 Colour Raytracer::shadeRay( Ray3D& ray, int depth) {
@@ -367,6 +355,28 @@ void Raytracer::dofColor(Colour col, Point3D imagePlane, Point3D origin, Matrix4
 	col = (double) 1.0 / NUM_APERTURE_RAYS * col;
 }
 
+/* Put the refracted direction in t. Returns false if total internal refraction */
+bool refract(Vector3D d, Vector3D n, double n1, Vector3D& t) {
+	double ddotn = d.dot(n);
+	double n2 = 1.0; // assume air - basically all refractive objects are hollow
+	double sqrtTerm = sqrt(1.0 - ((pow(n1, 2) * (1 - pow(ddotn, 2))) / pow(n2, 2)));
+	if (sqrtTerm < 0) {
+		return false;
+	} 
+	Vector3D term1 = (1 / n2) * (n1 * (d - (ddotn * n)));
+	Vector3D term2 = sqrtTerm * n;
+	t = term1 - term2;
+	t.normalize();
+	return true;
+}
+
+/* Put the reflected direction in r */
+void reflect(Vector3D& d, Vector3D& n, Vector3D& r) {
+	r = d - (2 * (d.dot(n)) * n);
+	r.normalize();
+}
+
+
 void Raytracer::doRefraction(Ray3D ray, Colour col, int depth)
 {
 	Colour k;
@@ -443,14 +453,6 @@ void Raytracer::doRefraction(Ray3D ray, Colour col, int depth)
 	}
 }
 
-void Raytracer::setAmbientLight(Colour colour) {
-	ambientLight = colour;
-}
-
-Colour Raytracer::getAmbientLight() {
-	return ambientLight;
-}
-
 SceneDagNode* Raytracer::addMesh(string filename, Material* material) {
 
   	//open text file for input
@@ -486,7 +488,6 @@ SceneDagNode* Raytracer::addMesh(string filename, Material* material) {
 
 }
 
-
 /* Defines materials */
 Material gold( Colour(0.3, 0.3, 0.3), Colour(0.75164, 0.60648, 0.22648), 
                 Colour(0.628281, 0.555802, 0.366065), 
@@ -516,7 +517,7 @@ Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0),
 /* The default scene, given with the assignment */
 void defaultScene(Raytracer& raytracer) {
       // Defines a point light source.
-	  raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
+	  raytracer.ambient = Colour(0.9, 0.9, 0.9);
       raytracer.addLightSource( new PointLight(Point3D(0, 0, 5), Colour(0.9, 0.9, 0.9) ) );
 	
       // Add a unit square into the scene with material mat.
@@ -540,7 +541,7 @@ void defaultScene(Raytracer& raytracer) {
 void meshScene(Raytracer& raytracer) {
 
 	// Define ambient lighting
-	raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
+	raytracer.ambient = Colour(0.9, 0.9, 0.9);
 	// Defines a point light source.
 	raytracer.addLightSource( new PointLight(Point3D(5, 40, -40), 
 				Colour(0.9, 0.9, 0.9) ) );
@@ -575,7 +576,7 @@ void meshScene(Raytracer& raytracer) {
 void softshadowScene(Raytracer& raytracer) {
 
     // Defines a point light source.
-    raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
+    raytracer.ambient = Colour(0.9, 0.9, 0.9);
     raytracer.addLightSource( new AreaLight(Point3D(0, 0, 5), Vector3D(0, 1, 0), Vector3D(1, 0, 0), 0.3, 0.3,  
                             Colour(0.9, 0.9, 0.9), raytracer ));
 
@@ -587,8 +588,7 @@ void softshadowScene(Raytracer& raytracer) {
     SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
     SceneDagNode* cylinder = raytracer.addObject( new UnitCylinder(), &weird );
     SceneDagNode* cylinder2 = raytracer.addObject( new UnitCylinder(), &weird );
-    
-    SceneDagNode* cylinderUp = raytracer.addObject( new UnitCylinder(), &blue);
+    SceneDagNode* cylinder3 = raytracer.addObject( new UnitCylinder(), &blue);
 
     // Apply some transformations to the unit square.
     double factor1[3] = { 1.0, 2.0, 1.0 };
@@ -615,9 +615,9 @@ void softshadowScene(Raytracer& raytracer) {
 
     raytracer.scale(cylinder2, Point3D(0, 0, 0), factor3);
     raytracer.translate(cylinder2, Vector3D(-1, -4, -10));
-    
-    raytracer.scale(cylinder, Point3D(0, 0, 0), factor3);
-    raytracer.translate(cylinder, Vector3D(0, -1, -3));
+
+    raytracer.scale(cylinder3, Point3D(0, 0, 0), factor3);
+    raytracer.translate(cylinder3, Vector3D(0, -1, -5));
 
     raytracer.translate(plane, Vector3D(0, 0, -7));        
     raytracer.rotate(plane, 'z', 45); 
@@ -626,7 +626,7 @@ void softshadowScene(Raytracer& raytracer) {
 
 void cylinderConeScene(Raytracer& raytracer) {
     // Defines a point light source.
-    raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
+    raytracer.ambient = Colour(0.9, 0.9, 0.9);
     // Defines a point light source.
     raytracer.addLightSource( new PointLight(Point3D(2, 0, 5), 
                             Colour(0.9, 0.9, 0.9) ) );
@@ -665,7 +665,7 @@ void cylinderConeScene(Raytracer& raytracer) {
 void refractionScene(Raytracer& raytracer ){
 
     // Defines a point light source.
-    raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
+    raytracer.ambient = Colour(0.9, 0.9, 0.9);
     raytracer.addLightSource( new PointLight(Point3D(0, 0, 5),
                 Colour(0.9, 0.9, 0.9)) );
     raytracer.addLightSource( new PointLight(Point3D(0, 5, -5),
@@ -711,7 +711,7 @@ void refractionScene(Raytracer& raytracer ){
 
 void dofScene(Raytracer& raytracer ){
     // Defines a point light source.
-    raytracer.setAmbientLight(Colour(0.9, 0.9, 0.9));
+    raytracer.ambient = Colour(0.9, 0.9, 0.9);
     raytracer.addLightSource( new PointLight(Point3D(0, 0, 5),
                 Colour(0.9, 0.9, 0.9)) );
     raytracer.addLightSource( new PointLight(Point3D(0, 5, -5),
@@ -754,7 +754,7 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	Scene scene = MESH_SCENE;
+	Scene scene = DOF_SCENE;
 	int si = 0;
 	/* Define scene objects and transformations here */
 	switch(scene) {
