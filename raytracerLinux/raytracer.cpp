@@ -1,16 +1,3 @@
-/***********************************************************
-     Starter code for Assignment 3
-
-     This code was originally written by Jack Wang for
-		    CSC418, SPRING 2005
-
-		Implementations of functions in raytracer.h, 
-		and the main function which specifies the 
-		scene to be rendered.	
-
-***********************************************************/
-
-
 #include "raytracer.h"
 #include "bmp_io.h"
 #include <cmath>
@@ -27,9 +14,9 @@
 
 using namespace std;
 
-//#define SOFT_SHADOWS 				//remove comment to active soft shadow
-#define SHADOWS        			//remove comment to active hard shadow
-#define DOF   					//remove comment to active depth of focus
+#define SOFT_SHADOWS 				//remove comment to active soft shadow
+//#define SHADOWS        			//remove comment to active hard shadow
+//#define DOF   					//remove comment to active depth of focus
  
 Raytracer::Raytracer() : _lightSource(NULL) {
 	_root = new SceneDagNode();
@@ -498,6 +485,9 @@ Material red( Colour(0.7, 0, 0), Colour(0.7, 0.05, 0.05),
 Material blue( Colour(0, 0, 0.7), Colour(0, 0.05, 0.8), 
                 Colour(0.916228, 0.616228, 0.516228), 
                 45.0 );
+Material green( Colour(0, 0.7, 0), Colour(0, 0.05, 0.8), 
+                Colour(0.916228, 0.616228, 0.516228), 
+                45.0 );
 Material jade( Colour(0, 0, 0), Colour(0.54, 0.89, 0.63), 
                 Colour(0.316228, 0.316228, 0.316228), 
                 12.8 );
@@ -517,7 +507,7 @@ Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0),
 /* The default scene, given with the assignment */
 void defaultScene(Raytracer& raytracer) {
       // Defines a point light source.
-	  raytracer.ambient = Colour(0.9, 0.9, 0.9);
+	  
       raytracer.addLightSource( new PointLight(Point3D(0, 0, 5), Colour(0.9, 0.9, 0.9) ) );
 	
       // Add a unit square into the scene with material mat.
@@ -582,11 +572,11 @@ void softshadowScene(Raytracer& raytracer) {
 
     // Add a unit square into the scene with material mat.
     SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
-    SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &shiny );
+    SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &red );
     SceneDagNode* sphere3 = raytracer.addObject( new UnitSphere(), &highSphere );
 
     SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
-    SceneDagNode* cylinder = raytracer.addObject( new UnitCylinder(), &weird );
+    SceneDagNode* cylinder = raytracer.addObject( new UnitCylinder(), &green );
     SceneDagNode* cylinder2 = raytracer.addObject( new UnitCylinder(), &weird );
     SceneDagNode* cylinder3 = raytracer.addObject( new UnitCylinder(), &blue);
 
@@ -633,9 +623,9 @@ void cylinderConeScene(Raytracer& raytracer) {
 
     // Add a unit square into the scene with material mat.
     SceneDagNode* cone1 = raytracer.addObject( new UnitCone(), &gold );
-    SceneDagNode* cylinder1 = raytracer.addObject( new UnitCylinder(), &jade );
-    SceneDagNode* cone2 = raytracer.addObject( new UnitCone(), &red );
-    SceneDagNode* cylinder2 = raytracer.addObject( new UnitCylinder(), &blue );
+    SceneDagNode* cylinder1 = raytracer.addObject( new UnitCylinder(), &green );
+    SceneDagNode* cone2 = raytracer.addObject( new UnitCone(), &blue );
+    SceneDagNode* cylinder2 = raytracer.addObject( new UnitCylinder(), &green );
     SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
     SceneDagNode* cylinder3 = raytracer.addObject( new UnitCylinder(), &red);
 
@@ -718,7 +708,7 @@ void dofScene(Raytracer& raytracer ){
                 Colour(0.4, 0.4, 0.4)) );
 
 
-    // Add a unit square into the scene with material mat.
+    // Add a unit sphere into the scene with material mat.
     SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
     SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &gold );
     SceneDagNode* sphere3 = raytracer.addObject( new UnitSphere(), &gold );
@@ -726,7 +716,7 @@ void dofScene(Raytracer& raytracer ){
     SceneDagNode* sphere5 = raytracer.addObject( new UnitSphere(), &gold );
     SceneDagNode* sphere6 = raytracer.addObject( new UnitSphere(), &gold );
 
-    // Apply some transformations to the unit square.
+    // Apply some transformations to the unit sphere.
     raytracer.translate(sphere , Vector3D(-3  , -1  , -5));
     raytracer.translate(sphere2, Vector3D(-1.5, -0.5, -7));
     raytracer.translate(sphere3, Vector3D( 0  , -0  , -9));
@@ -754,7 +744,7 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	Scene scene = DOF_SCENE;
+	Scene scene = SOFTSHADOW_SCENE;
 	int si = 0;
 	/* Define scene objects and transformations here */
 	switch(scene) {

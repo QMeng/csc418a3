@@ -1,13 +1,3 @@
-/***********************************************************
-     Starter code for Assignment 3
-
-     This code was originally written by Jack Wang for
-		    CSC418, SPRING 2005
-
-		classes defining primitives in the scene
-
-***********************************************************/
-
 #include "util.h"
 
 // All primitives should provide a intersection function.  

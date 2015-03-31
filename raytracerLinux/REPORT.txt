@@ -1,0 +1,39 @@
+Overall:
+We designed 5 feature: cylinder&cone, mesh, depth of field, soft shadow, 
+refraction. 
+
+Detailed features:
+
+Cylinder&cone:
+The scene has several cylinders ans cones of different sizes, basic translation and scalations are used to move and change the sizes of them. 
+In raytracer.cpp, at the top, only use #define SHADOWS as for the hard shadows. Also, in the main function, change scene variable to CYLINDERCONE_SCENE to trigger the program into render this scene.
+
+Mesh:
+The scene has several objects in it. The object is rendered by adding NullObject class type objects into the scene. NullObject class type is extended from SceneObject and used as a mesh container in this project. The mesh property is loaded from a self defined file "humanoid.stl". 
+Change the scene variable in the main function of raytracer.cpp to MESH_SCENE to render the scene. Define the SHADOWS marco at the top of the same file will render the hard shadows. 
+
+Depth of field:
+Define DOF in raytracer.cpp will activite the depth of field mode. 
+Also change scene variable in the main function to let the program render the scene. Notice in the .bmp file, the sphere are less blured closert to the focus point. 
+
+Soft Shadow:
+Define SOFT_SHADOW in raytracer.cpp and remove SHADOWS. Also, change the scene variable in the main function to SOFTSHADOW_SCENE to render the scene. An area light is used to create the soft shadow effects. An area light is formed by n point lights randomly selected from this area, each have a 1/n intensity. 
+
+Refraction:
+Define SHADOWS in raytracer.cpp and remove SOFT_SHADOW. Change the scene variable in the main function to REFRACTION_SCENE to render the scene. 
+Beer's Law and Schelick are used to render and approximate Fresnel's equations. Glass is a kind of material that has index of refraction larger than 0. SHADE_DEPTH in raytracer.h should be 5 to render the scene, or othervise the glass sphere is black. 
+
+Files:
+
+Part A: 
+sig1.bmp sig2.bmp
+diffuse1.bmp diffuse2.bmp
+phong1.bmp phong2.bmp
+
+Part B:
+
+mesh1.bmp mesh2.bmp						-- mesh
+refraction1.bmp refraction2.bmp			-- refraction
+dof1.bmp								-- depth of field
+softshadow1.bmp softshadow2.bmp			-- soft shadow
+cylinder&cone1.bmp cylinder&cone2.bmp	-- cylinder and cone

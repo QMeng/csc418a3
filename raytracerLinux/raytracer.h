@@ -1,16 +1,3 @@
-/***********************************************************
-     Starter code for Assignment 3
-
-     This code was originally written by Jack Wang for
-		    CSC418, SPRING 2005
-
-		This file contains the interface and 
-		datastructures of the raytracer.  
-		Simple traversal and addition code to 
-		the datastructures are given to you.
-
-***********************************************************/
-
 #ifndef _RAYTRACER_
 #define _RAYTRACER_
 
@@ -125,12 +112,8 @@ public:
 	SceneDagNode *_root;
 	// Traversal code for the scene graph, the ray is transformed into 
 	// the object space of each node where intersection is performed.
-	//void traverseScene( SceneDagNode* node, Ray3D& ray, Matrix4x4 modelToWorld, Matrix4x4 worldToModel );
+
 	void traverseScene( SceneDagNode* node, Ray3D& ray ); //{
-		//Matrix4x4 modelToWorld;
-		//Matrix4x4 worldToModel;
-		//traverseScene(node, ray, modelToWorld, worldToModel);
-	//}
 	
 	void dofColor(Colour col, Point3D imagePlane, Point3D origin, Matrix4x4 viewToWorld);
 	void doRefraction(Ray3D ray, Colour col, int depth);

@@ -1,15 +1,3 @@
-/***********************************************************
-     Starter code for Assignment 3
-
-     This code was originally written by Jack Wang for
-		    CSC418, SPRING 2005
-
-		utility functions and structures
-		(based on code from CGL, University of Waterloo), 
-		modify this file as you see fit.
-
-***********************************************************/
-
 #ifndef _UTIL_
 #define _UTIL_
 
