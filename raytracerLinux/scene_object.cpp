@@ -131,7 +131,6 @@ bool UnitTriangle::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 	double t_value = -(raySpace.origin - p0).dot(n) / denom;
 	Point3D planeIntersect = raySpace.point_at(t_value);
 
-	// see if the point is contained in the 3 half planes
 	if (((p1 - p0).cross(planeIntersect - p0)).dot(n) >= 0 &&
 		((p2 - p1).cross(planeIntersect - p1)).dot(n) >= 0 &&
 		((p0 - p2).cross(planeIntersect - p2)).dot(n) >= 0
@@ -157,7 +156,6 @@ bool inUnitCircle(Point3D point) {
 bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld ) {
 
-	// a cylinder: unit circle in xz plane, y from -0.5 to 0.5
 	bool overwrite = false;
 	bool hit_top = false;
 	bool hit_bottom = false;
@@ -191,7 +189,6 @@ bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		}
 	}
 
-	// check top and bottom also:
 	double t_top = (0.5 - py) / dy;
 	double t_bottom = (-0.5 - py) / dy;
 
@@ -203,7 +200,6 @@ bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		possible_t_values.push_back(t_bottom);	
 	}
 	
-	// smallest t value that is greater than 0 and meets the height requirements:
 	std::vector<double> qualifying_t_values;
 	for(unsigned int i = 0; i < possible_t_values.size(); i++) {
 		double t = possible_t_values.at(i);
@@ -254,8 +250,6 @@ bool UnitCylinder::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		const Matrix4x4& modelToWorld ) {
 
-	// a cone: unit circle in xz plane, y from 0 to 1
-
 	bool overwrite = false;
 	bool hit_bottom = false;
 
@@ -287,13 +281,11 @@ bool UnitCone::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 		}
 	}
 
-	// check bottom also:
 	double t_bottom = -py / dy;
 	if (inUnitCircle(rayModelSpace.point_at(t_bottom))) {
 		possible_t_values.push_back(t_bottom);	
 	}
 	
-	// we want the smallest t value that is greater than 0 and meets the height requirements:
 	std::vector<double> qualifying_t_values;
 	for(unsigned int i = 0; i < possible_t_values.size(); i++) {
 		double t = possible_t_values[i];

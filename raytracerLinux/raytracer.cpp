@@ -14,8 +14,8 @@
 
 using namespace std;
 
-#define SOFT_SHADOWS 				//remove comment to active soft shadow
-//#define SHADOWS        			//remove comment to active hard shadow
+//#define SOFT_SHADOWS 				//remove comment to active soft shadow
+#define SHADOWS        			//remove comment to active hard shadow
 //#define DOF   					//remove comment to active depth of focus
  
 Raytracer::Raytracer() : _lightSource(NULL) {
@@ -194,7 +194,7 @@ void Raytracer::computeShading( Ray3D& ray ) {
 		// Each lightSource provides its own shading function.
 		LightSource* lightSource = curLight->light;
 
-		// Implement shadows here if needed.
+		// Implement shadows here if needsed.
 		#ifdef SHADOWS
 		Vector3D lightToObject = ray.intersection.point - lightSource->get_position();
 		lightToObject.normalize();
@@ -209,7 +209,7 @@ void Raytracer::computeShading( Ray3D& ray ) {
 
 		curLight = curLight->next;
 	}
-	// points in shadows get ambient lighting
+
 	if (LightSource::RENDER_TYPE != SCENE_SIGNATURE) {
 		Colour col = ray.col + ray.intersection.mat->ambient * ambient;
 		col.clamp();
@@ -315,9 +315,6 @@ void Raytracer::dofColor(Colour col, Point3D imagePlane, Point3D origin, Matrix4
 {
 	double z_f = FOCAL_DISTANCE;
 	double x_f, y_f;
-	// Cast ray from center of eye (center of aperture), through pixel of interest
-	// to the focus plane.
-	// Find point of intersection.
 	Vector3D ray_dir = imagePlane - origin;
 	ray_dir.normalize();
 	double t_intersect = z_f / ray_dir[2];
@@ -326,7 +323,6 @@ void Raytracer::dofColor(Colour col, Point3D imagePlane, Point3D origin, Matrix4
 			
 	Point3D focus_point(x_f, y_f, z_f);
 
-	// Randomly cast rays from within aperture towards the focus point and capture color.
 	for (int k = 0; k < NUM_APERTURE_RAYS; k++) {
 		double aperture_theta  = fRand(0, 2 * (double) M_PI);
 		double aperture_radius = fRand(0, (double) APERTURE);
@@ -334,18 +330,16 @@ void Raytracer::dofColor(Colour col, Point3D imagePlane, Point3D origin, Matrix4
 		Ray3D rayViewSpace(ray_origin, focus_point - ray_origin);     
 		Ray3D rayWorldSpace(viewToWorld * rayViewSpace.origin, viewToWorld * rayViewSpace.dir);
 			    
-		// Sum up final colour
+		
 		col = col + shadeRay(rayWorldSpace, SHADE_DEPTH);
 	}
 		      
-	// Find the final average colour
 	col = (double) 1.0 / NUM_APERTURE_RAYS * col;
 }
 
-/* Put the refracted direction in t. Returns false if total internal refraction */
 bool refract(Vector3D d, Vector3D n, double n1, Vector3D& t) {
 	double ddotn = d.dot(n);
-	double n2 = 1.0; // assume air - basically all refractive objects are hollow
+	double n2 = 1.0;
 	double sqrtTerm = sqrt(1.0 - ((pow(n1, 2) * (1 - pow(ddotn, 2))) / pow(n2, 2)));
 	if (sqrtTerm < 0) {
 		return false;
@@ -357,7 +351,6 @@ bool refract(Vector3D d, Vector3D n, double n1, Vector3D& t) {
 	return true;
 }
 
-/* Put the reflected direction in r */
 void reflect(Vector3D& d, Vector3D& n, Vector3D& r) {
 	r = d - (2 * (d.dot(n)) * n);
 	r.normalize();
@@ -442,14 +435,11 @@ void Raytracer::doRefraction(Ray3D ray, Colour col, int depth)
 
 SceneDagNode* Raytracer::addMesh(string filename, Material* material) {
 
-  	//open text file for input
 	ifstream infile(filename.c_str(), ios::in);
 	if(!infile) {
-// 		std::cerr <<" failed to open file\n";
 		exit(-1);
 	}
 
-	// read in coords
 	vector<Point3D> coords;
 	string textline;
 	while(getline(infile, textline, '\n')) {
@@ -461,7 +451,6 @@ SceneDagNode* Raytracer::addMesh(string filename, Material* material) {
 
 	SceneDagNode* meshContainer = addObject( new NullObject(), material );
 
-	// format: normal, 3 coords, normal, 3 coords etc.
 	assert(coords.size() % 4 == 0);
 	for (unsigned int i = 0; i < coords.size(); i+=4) {
 		UnitTriangle* myTriangle = new UnitTriangle(Vector3D (coords[i] - Point3D(0, 0, 0)),
@@ -506,15 +495,13 @@ Material glass( Colour(0.0, 0.0, 0.0), Colour(0.0, 0.0, 0.0),
 
 /* The default scene, given with the assignment */
 void defaultScene(Raytracer& raytracer) {
-      // Defines a point light source.
-	  
+
+	  raytracer.ambient = Colour(0.9, 0.9, 0.9);
       raytracer.addLightSource( new PointLight(Point3D(0, 0, 5), Colour(0.9, 0.9, 0.9) ) );
 	
-      // Add a unit square into the scene with material mat.
       SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
       SceneDagNode* plane = raytracer.addObject( new UnitSquare(), &jade );
-	
-      // Apply some transformations to the unit square.
+
       double factor1[3] = { 1.0, 2.0, 1.0 };
       double factor2[3] = { 6.0, 6.0, 6.0 };
       raytracer.translate(sphere, Vector3D(0, 0, -5));
@@ -530,9 +517,8 @@ void defaultScene(Raytracer& raytracer) {
 
 void meshScene(Raytracer& raytracer) {
 
-	// Define ambient lighting
 	raytracer.ambient = Colour(0.9, 0.9, 0.9);
-	// Defines a point light source.
+
 	raytracer.addLightSource( new PointLight(Point3D(5, 40, -40), 
 				Colour(0.9, 0.9, 0.9) ) );
 
@@ -565,12 +551,10 @@ void meshScene(Raytracer& raytracer) {
 
 void softshadowScene(Raytracer& raytracer) {
 
-    // Defines a point light source.
     raytracer.ambient = Colour(0.9, 0.9, 0.9);
     raytracer.addLightSource( new AreaLight(Point3D(0, 0, 5), Vector3D(0, 1, 0), Vector3D(1, 0, 0), 0.3, 0.3,  
                             Colour(0.9, 0.9, 0.9), raytracer ));
 
-    // Add a unit square into the scene with material mat.
     SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
     SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &red );
     SceneDagNode* sphere3 = raytracer.addObject( new UnitSphere(), &highSphere );
@@ -580,7 +564,6 @@ void softshadowScene(Raytracer& raytracer) {
     SceneDagNode* cylinder2 = raytracer.addObject( new UnitCylinder(), &weird );
     SceneDagNode* cylinder3 = raytracer.addObject( new UnitCylinder(), &blue);
 
-    // Apply some transformations to the unit square.
     double factor1[3] = { 1.0, 2.0, 1.0 };
     double factor2[3] = { 6.0, 6.0, 6.0 };
     double factor3[3] = { 0.4, 0.4, 0.4 };
@@ -615,13 +598,10 @@ void softshadowScene(Raytracer& raytracer) {
 }
 
 void cylinderConeScene(Raytracer& raytracer) {
-    // Defines a point light source.
     raytracer.ambient = Colour(0.9, 0.9, 0.9);
-    // Defines a point light source.
     raytracer.addLightSource( new PointLight(Point3D(2, 0, 5), 
                             Colour(0.9, 0.9, 0.9) ) );
 
-    // Add a unit square into the scene with material mat.
     SceneDagNode* cone1 = raytracer.addObject( new UnitCone(), &gold );
     SceneDagNode* cylinder1 = raytracer.addObject( new UnitCylinder(), &green );
     SceneDagNode* cone2 = raytracer.addObject( new UnitCone(), &blue );
@@ -654,7 +634,6 @@ void cylinderConeScene(Raytracer& raytracer) {
 
 void refractionScene(Raytracer& raytracer ){
 
-    // Defines a point light source.
     raytracer.ambient = Colour(0.9, 0.9, 0.9);
     raytracer.addLightSource( new PointLight(Point3D(0, 0, 5),
                 Colour(0.9, 0.9, 0.9)) );
@@ -663,7 +642,6 @@ void refractionScene(Raytracer& raytracer ){
 
     glass.indexOfRefraction = 1.05;
 
-    // Add a unit square into the scene with material mat.
     SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &glass );
     SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &jade );
     SceneDagNode* sphere3 = raytracer.addObject( new UnitSphere(), &glass );
@@ -672,7 +650,6 @@ void refractionScene(Raytracer& raytracer ){
     SceneDagNode* plane2 = raytracer.addObject( new UnitSquare(), &weird );
     SceneDagNode* plane3 = raytracer.addObject( new UnitSquare(), &shiny );
 
-    // Apply some transformations to the unit square.
     double factor1[3] = { 0.5, 0.5, 0.5 };
     double factor2[3] = { 10.0, 10.0, 10.0 };
     double factor3[3] = { 0.4, 0.4, 0.4 };
@@ -700,7 +677,7 @@ void refractionScene(Raytracer& raytracer ){
 
 
 void dofScene(Raytracer& raytracer ){
-    // Defines a point light source.
+
     raytracer.ambient = Colour(0.9, 0.9, 0.9);
     raytracer.addLightSource( new PointLight(Point3D(0, 0, 5),
                 Colour(0.9, 0.9, 0.9)) );
@@ -708,7 +685,6 @@ void dofScene(Raytracer& raytracer ){
                 Colour(0.4, 0.4, 0.4)) );
 
 
-    // Add a unit sphere into the scene with material mat.
     SceneDagNode* sphere = raytracer.addObject( new UnitSphere(), &gold );
     SceneDagNode* sphere2 = raytracer.addObject( new UnitSphere(), &gold );
     SceneDagNode* sphere3 = raytracer.addObject( new UnitSphere(), &gold );
@@ -716,7 +692,6 @@ void dofScene(Raytracer& raytracer ){
     SceneDagNode* sphere5 = raytracer.addObject( new UnitSphere(), &gold );
     SceneDagNode* sphere6 = raytracer.addObject( new UnitSphere(), &gold );
 
-    // Apply some transformations to the unit sphere.
     raytracer.translate(sphere , Vector3D(-3  , -1  , -5));
     raytracer.translate(sphere2, Vector3D(-1.5, -0.5, -7));
     raytracer.translate(sphere3, Vector3D( 0  , -0  , -9));
@@ -744,7 +719,7 @@ int main(int argc, char* argv[])
 		height = atoi(argv[2]);
 	}
 
-	Scene scene = SOFTSHADOW_SCENE;
+	Scene scene = DEFAULT;
 	int si = 0;
 	/* Define scene objects and transformations here */
 	switch(scene) {

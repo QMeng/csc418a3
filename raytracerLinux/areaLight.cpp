@@ -4,12 +4,11 @@
 void AreaLight::shade( Ray3D& ray ) {
     PointLight pointLight = PointLight(Point3D(), color);
 
-    // pick points on the light and pretend a point light of 1/#points intensity is there
     for (unsigned int i = 0; i < NUM_SHADOW_RAYS; i++) {
 
         double us = (double)rand() / RAND_MAX;
         double vs = (double)rand() / RAND_MAX;
-        // pick a point somewhere on the light
+        
         Point3D pol = pos + us * uLength * u + vs * vLength * v;  
         Vector3D lto = ray.intersection.point - pol;
         lto.normalize();
